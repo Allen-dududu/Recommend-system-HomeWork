@@ -19,11 +19,12 @@ class ItemCF:
             sep="::",
             names=["userId", "gender", "age", "Occupation", "zip-code"]
         )["userId"].tolist()
+        self.itemSum = self.ItemSimilarity()
 
     def ItemSimilarity(self):
         if os.path.exists("item_sim.json"):
             print("物品相似度从文件中加载")
-            W = json.load(open("item_sim.json", "r"))
+            itemSim = json.load(open("item_sim.json", "r"))
         else:
             # 建立用户-物品倒序表
             t = self.train_rating
@@ -69,33 +70,37 @@ class ItemCF:
     # nitems：总返回n个物品
     def recommendTopK(self, userId, neighbor_item, nitems):
         rank = dict()
-        itemSimilarity = self.ItemSimilarity()
 
         had_score = self.train_rating[self.train_rating["userId"] == userId]
         for index,row in had_score.iterrows():
-            for j,wj in sorted(itemSimilarity[str(row["movieID"])].items(),key = lambda x:x[1], reverse = True)[0:neighbor_item]:
+            for j,wj in sorted(self.itemSum[str(row["movieID"])].items(),key = lambda x:x[1], reverse = True)[0:neighbor_item]:
                 if int(j) in had_score["movieID"]:
                     continue
                 rank.setdefault(j,0)
                 rank[j] += row["rate"] * wj
-
-        #
-        #
-        #
-        # for movieId in movies[0:neighbor_item]:
-        #     if movieId in had_score:
-        #         continue
-        #     rank.setdefault(movieId, 0.0)
-        #     for v, vuw in sorted(w[str(userId)].items(), key=lambda item: item[1], reverse=True)[:sim_user]:
-        #         if userId != vuw:
-        #             rank[movieId] += \
-        #             self.train_rating.loc[(self.train_rating.userId == vuw) & (self.train_rating.movieID == movieId)][
-        #                 "rate"] * vuw
         return dict(sorted(rank.items(), key=lambda x: x[1], reverse=True)[0:nitems])
 
 
 itemCF = ItemCF("train.csv", "movies.dat", "users.dat")
-print(itemCF.recommendTopK(8, 20, 50))
+test_rating = pd.read_csv('test.csv')
+userIds = pd.read_table(
+            'users.dat',
+            header = None,
+            sep = "::",
+            names = ["userId","gender","age","Occupation","zip-code"]
+        )["userId"].tolist()
+mse = 0
+for userid in userIds:
+    # rate_count = test_rating[test_rating["userId"] == userid][""].str.len()
+    test_items = test_rating[test_rating["userId"] == userid]["movieID"].tolist()
+    recommend_item = list(itemCF.recommendTopK(userid,250,len(test_items)).keys())
+    
+    if recommend_item != 0:
+        mse +=math.pow(len(set(test_items).symmetric_difference(set(recommend_item))),2)
+        print(mse)
+MSE = mse/len(userIds)
+print(MSE)
+# print(itemCF.recommendTopK(8, 20, 50))
 
 
 
