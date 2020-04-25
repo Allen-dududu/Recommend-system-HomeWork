@@ -106,8 +106,11 @@ class UserCF:
                 sum_users_sum += sum_userId[1]
                 sum_users_score_sum += sum_userId[1]*sum_user_rating.iloc[0][3]
                 k +=1
-
-        score = sum_users_score_sum / sum_users_sum
+        # 防止这部电影只有userA一个人看过 sum_users_sum等于0 报错
+        # 孤独的观影人
+        if sum_users_sum != 0.0:
+            score = sum_users_score_sum / sum_users_sum
+        
         return score
 
 userCF = UserCF("train.csv","movies.dat","users.dat")
