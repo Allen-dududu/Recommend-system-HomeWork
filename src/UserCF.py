@@ -81,23 +81,31 @@ class UserCF:
                 rank[row["movieID"]] += row["rate"] * vuw
         return dict(sorted(rank.items(),key=lambda x: x[1],reverse=True)[0:nitems])
     """预测评分
+    userA : 用户
+    item ： 被预测电影ID
+    k_end：取前几个相似度最大的用户对item的评分， k_end 实际被计算的相似用户
     """    
-    def preUserItemScore(self,userA,item,sumUserCount):
+    def preUserItemScore(self,userA,item,k_end):
         score = 0.0
         item_id = str(int(item))
         sds =self.w[str(userA)].items()
-        sum_users = sorted(sds, key=lambda x: x[1], reverse=True)[0:sumUserCount]
+        sum_users = sorted(sds, key=lambda x: x[1], reverse=True)
         # 被计算的相似用户的相似总和
         sum_users_sum = 0.0
         #被计算的相似用户的相似度 与 相应评分的乘积之和
         sum_users_score_sum = 0.0
+        #被计算的相似用户
+        k = 0
         for sum_userId in sum_users:
             sum_user_rating = self.train_rating.loc[(self.train_rating["userId"] ==int(sum_userId[0]))&(self.train_rating["movieID"] == int(item)) ]
+            if k > k_end:
+                break
             if(sum_user_rating.empty):
                 continue
             else:
                 sum_users_sum += sum_userId[1]
                 sum_users_score_sum += sum_userId[1]*sum_user_rating.iloc[0][3]
+                k +=1
 
         score = sum_users_score_sum / sum_users_sum
         return score
@@ -115,7 +123,7 @@ for userid in userIds:
     # rate_count = test_rating[test_rating["userId"] == userid][""].str.len()
     test_items = test_rating[test_rating["userId"] == userid]
     for index , row in test_items.iterrows():
-        score = userCF.preUserItemScore(userid,row["movieID"],400)
+        score = userCF.preUserItemScore(userid,row["movieID"],6)
         mse +=math.pow(score-row["rate"],2)
         print("用户："+str(userid)+"--电影："+str(row["movieID"])+"-- 预测评分"+str(score)+"---真实评分"+str(row["rate"]))
 

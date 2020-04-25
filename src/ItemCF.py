@@ -80,6 +80,40 @@ class ItemCF:
                 rank[j] += row["rate"] * wj
         return dict(sorted(rank.items(), key=lambda x: x[1], reverse=True)[0:nitems])
 
+    """预测用户对物品的评分
+    userA : 用户
+    item ： 被预测电影ID
+    k_end：
+    """    
+    def preUserItemScore(self,userA,item,k_end):
+        score = 0.0
+        sd = str(int(item))
+        sds =self.itemSum[sd].items()
+        item_sum = sorted(sds, key=lambda x: x[1], reverse=True)
+
+        # 被计算的相似物品的相似总和
+        sum_item_sum = 0.0
+        #被计算的相似物品的相似度 与 相应评分的乘积之和
+        sum_item_score_sum = 0.0
+
+        # 这个用户之前评过分的电影与item的相似度，和它的评分
+        d = dict()
+        for index,row in self.train_rating[self.train_rating["userId"] == userA].iterrows():
+            d.setdefault(row["movieID"],{})
+            d[row["movieID"]].setdefault("相似度", 0)
+            d[row["movieID"]].setdefault("评分", 0)
+            # item_sum[0]
+            s = list(filter(lambda x: x[0] ==str(row["movieID"] ),item_sum))
+            d[row["movieID"]]["相似度"] = s[0][1]
+            d[row["movieID"]]["评分"] = row["rate"]
+        # 按相似度取前k_end 个
+        dr = sorted(d.items(), key=lambda x: x[1]["相似度"], reverse=True)[0:k_end]
+        for key , value in dr:
+            sum_item_sum += value["相似度"]
+            sum_item_score_sum +=value["相似度"]*value["评分"]
+        score = sum_item_score_sum/sum_item_sum
+        return score
+
 
 itemCF = ItemCF("train.csv", "movies.dat", "users.dat")
 test_rating = pd.read_csv('test.csv')
@@ -92,15 +126,14 @@ userIds = pd.read_table(
 mse = 0
 for userid in userIds:
     # rate_count = test_rating[test_rating["userId"] == userid][""].str.len()
-    test_items = test_rating[test_rating["userId"] == userid]["movieID"].tolist()
-    recommend_item = list(itemCF.recommendTopK(userid,250,len(test_items)).keys())
-    
-    if recommend_item != 0:
-        mse +=math.pow(len(set(test_items).symmetric_difference(set(recommend_item))),2)
-        print(mse)
+    test_items = test_rating[test_rating["userId"] == userid]
+    for index , row in test_items.iterrows():
+        score = itemCF.preUserItemScore(userid,row["movieID"],5)
+        mse +=math.pow(score-row["rate"],2)
+        print("用户："+str(userid)+"--电影："+str(row["movieID"])+"-- 预测评分"+str(score)+"---真实评分"+str(row["rate"]))
+
 MSE = mse/len(userIds)
 print(MSE)
-# print(itemCF.recommendTopK(8, 20, 50))
 
 
 
