@@ -104,8 +104,9 @@ class ItemCF:
             d[row["movieID"]].setdefault("评分", 0)
             # item_sum[0]
             s = list(filter(lambda x: x[0] ==str(row["movieID"] ),item_sum))
-            d[row["movieID"]]["相似度"] = s[0][1]
-            d[row["movieID"]]["评分"] = row["rate"]
+            if len(s)!=0:
+                d[row["movieID"]]["相似度"] = s[0][1]
+                d[row["movieID"]]["评分"] = row["rate"]
         # 按相似度取前k_end 个
         dr = sorted(d.items(), key=lambda x: x[1]["相似度"], reverse=True)[0:k_end]
         for key , value in dr:
