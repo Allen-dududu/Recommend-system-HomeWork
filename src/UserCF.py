@@ -79,15 +79,28 @@ class UserCF:
                     continue
                 rank.setdefault(row["movieID"], 0.0)
                 rank[row["movieID"]] += row["rate"] * vuw
-        #
-        # for movieId in movies[0:nitems]:
-        #     if movieId in had_score:
-        #         continue
-        #     rank.setdefault(movieId,0.0)
-        #     for v,vuw in sorted(w[str(userId)].items(),key=lambda item:item[1],reverse=True)[:sim_user]:
-        #         if userId != vuw:
-        #             rank[movieId] += self.train_rating.loc[(self.train_rating.userId ==vuw)& (self.train_rating.movieID == movieId)]["rate"]* vuw
         return dict(sorted(rank.items(),key=lambda x: x[1],reverse=True)[0:nitems])
+    """预测评分
+    """    
+    def preUserItemScore(self,userA,item,sumUserCount):
+        score = 0.0
+        item_id = str(int(item))
+        sds =self.w[str(userA)].items()
+        sum_users = sorted(sds, key=lambda x: x[1], reverse=True)[0:sumUserCount]
+        # 被计算的相似用户的相似总和
+        sum_users_sum = 0.0
+        #被计算的相似用户的相似度 与 相应评分的乘积之和
+        sum_users_score_sum = 0.0
+        for sum_userId in sum_users:
+            sum_user_rating = self.train_rating.loc[(self.train_rating["userId"] ==int(sum_userId[0]))&(self.train_rating["movieID"] == int(item)) ]
+            if(sum_user_rating.empty):
+                continue
+            else:
+                sum_users_sum += sum_userId[1]
+                sum_users_score_sum += sum_userId[1]*sum_user_rating.iloc[0][3]
+
+        score = sum_users_score_sum / sum_users_sum
+        return score
 
 userCF = UserCF("train.csv","movies.dat","users.dat")
 test_rating = pd.read_csv('test.csv')
@@ -100,21 +113,16 @@ userIds = pd.read_table(
 mse = 0
 for userid in userIds:
     # rate_count = test_rating[test_rating["userId"] == userid][""].str.len()
-    test_items = test_rating[test_rating["userId"] == userid]["movieID"].tolist()
-    recommend_item = list(userCF.recommendTopK(userid,20,len(test_items)).keys())
-    
-    if recommend_item != 0:
-        mse +=math.pow(len(set(test_items).symmetric_difference(set(recommend_item))),2)
-        print(mse)
+    test_items = test_rating[test_rating["userId"] == userid]
+    for index , row in test_items.iterrows():
+        score = userCF.preUserItemScore(userid,row["movieID"],400)
+        mse +=math.pow(score-row["rate"],2)
+        print("用户："+str(userid)+"--电影："+str(row["movieID"])+"-- 预测评分"+str(score)+"---真实评分"+str(row["rate"]))
+
 MSE = mse/len(userIds)
 print(MSE)
 
 
-
-    
-
-
-print(userCF.recommendTopK(8,20,50))
                
 
 
