@@ -17,12 +17,13 @@
 <p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;② 依据浏览记录分析得出所有物品之间的相似度；</p>
 <p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;③ 对于目标用户评价高的物品，找出与之相似度最高的K个物品；</p>
 <p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;④ 将这K个物品中目标用户没有浏览过的物品推荐给目标用户</p>
-<h3><a name="t5"></a><a name="t5"></a>3、基于矩阵分解的推荐算法</h3>
+<h3><a name="t5"></a><a name="t5"></a>4、基于矩阵分解的推荐算法</h3>
 <span style="color: rgb(62, 71, 83);font-size: 16px;">(1)MF把用户对item的评分矩阵分解为User矩阵和Item矩阵，其中User矩阵每一行代表一个用户的向量，Item矩阵的每一列代表一个item的向量；</span>
 <p style="margin-left: 8px;margin-right: 8px;line-height: 1.75em;"><span style="color: rgb(62, 71, 83);font-size: 16px;">(2)用户<em>i&nbsp;</em>对item<em> j&nbsp;</em>的预测评分等于User矩阵的第<em>i&nbsp;</em>行和Item矩阵的第<em>j&nbsp;</em>列的内积，预测评分越大表示用户<em>i&nbsp;</em>喜欢item<em> j&nbsp;</em>的可能性越大；</span></p>
 <p style="margin-left: 8px;margin-right: 8px;line-height: 1.75em;"><span style="color: rgb(62, 71, 83);font-size: 16px;">(3)MF是把User矩阵和Item矩阵设为未知量，用它们来表示每个用户对每个item的预测评分，然后通过最小化预测评分和实际评分的差异学习出User矩阵和Item矩阵；</span></p>
 <p style="margin-left: 8px;margin-right: 8px;line-height: 1.75em;"><span style="color: rgb(62, 71, 83);font-size: 16px;">(4)MF是一种隐变量模型，它通过在隐类别的维度上去匹配用户和item来做推荐。</span></p>
 <p style="margin-left: 8px;margin-right: 8px;line-height: 1.75em;"><span style="color: rgb(62, 71, 83);font-size: 16px;">(5)MF是一种降维方法，它将用户或item的维度降低到隐类别个数的维度。</span></p>
+<h3><a name="t5"></a><a name="t5"></a>5、文件介绍</h3>
 SplitFile.py 划分测试集与训练集<br/>
 userCF.py 相邻用户推荐算法<br/>
 itemCF.py 相邻物品推荐算法<br/>
@@ -30,7 +31,7 @@ MatrixDecomposition.py 矩阵分解<br/>
 
 原始数据集：movies.dat ratings.dat users.dat<br/>
 分割的训练与测试集：train.csv test.csv<br/>
-<h3>userCF 输出结果</h3>
+<h3>（部分）userCF 输出结果</h3>
 <span>MSE(均方误差)：0.9333920943703241</span>
 <p align='center'>
 <img src='Images/微信截图_20200429154540.png' title='images' style='max-width:600px'></img>
